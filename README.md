@@ -1,4 +1,5 @@
-SAMP-launcher
+SAMP Server CLI
 =============
 
-CLI bash script for creating a server.cfg on the fly and launching a GTA SA-MP server
+Start the SAMP server using a command line interface.
+A server.cfg will be created with the desired options given to the launcher.
