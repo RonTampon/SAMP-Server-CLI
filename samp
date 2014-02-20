@@ -1,0 +1,181 @@
+#!/bin/bash
+ABSOLUTE_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)/
+SERVER_CFG="$ABSOLUTE_PATH"server.cfg
+
+# Initiate variables with default settings
+LANMODE=0
+MAXPLAYERS=
+ANNOUNCE=0
+QUERY=1
+PORT=
+HOSTNAME="SA-MP 0.3 Server"
+GAMEMODES=()
+WEBURL="www.sa-mp.com"
+RCONPASSWORD=
+FILTERSCRIPTS=()
+PLUGINS=()
+PASSWORD=
+MAPNAME="San Andreas"
+BIND=
+RCON=0
+MAXNPC=0
+ONFOOTRATE=40
+INCARRATE=40
+WEAPONRATE=40
+STREAMDISTANCE=300.0
+STREAMRATE=1000
+TIMESTAMPS=1
+LOGQUERIES=0
+LOGTIMEFORMAT="[%H:%M:%S]"
+OUTPUT=0
+GAMEMODETEXT="Unkown"
+CHATLOGGING=1
+MESSAGEHOLELIMIT=1000
+SHOTCOMPMODE=0
+LAUNCH=true
+
+
+if [[ "$1" =~ ^((-{1,2})([Hh]$|[Hh][Ee][Ll][Pp])|)$ ]]; then
+  echo "Usage: $0 -mp 128 -p 7777 -rp \"myrconpassword\" [OPTION...]"
+  echo ""
+  echo " Options"
+  echo "  -l,  --lanmode          lanmode, default: 0"
+  echo "  -mp, --maxplayers       maximum amount of players"
+  echo "  -a,  --announce         announce to masterlist, default: 0"
+  echo "  -q,  --query            toggle querying of server, default: 1"
+  echo "  -p,  --port             port to run the server on"
+  echo "  -h,  --hostname         servername, default: SA-MP 0.3 Server"
+  echo "  -gm, --gamemode         list the gamemodes, for each gamemode include times played, usage: -gm \"grandlarc 1\" -gm \"lvdm 5\""
+  echo "  -w,  --weburl           website the people can visit to gain more information about the server, default: www.sa-mp.com"
+  echo "  -rp, --rconpassword     rconpassword, to administrate the server"
+  echo "  -fs, --filterscript     filterscripts, possible to include all at once or multiple times, usage: -fs \"base gl_property\" -fs \"test_cmds\""
+  echo "  -pi, --plugin           plugins, possible to include all at once or multiple times, usage: -pi  \"mysql.so irc.so\" -fs \"reg_ex.so\""
+  echo "  -pw, --password         password to join the server, none if not set or empty"
+  echo "  -m,  --mapname          name of the map, default: San Andreas"
+  echo "  -b,  --bind             IP address to bind server on"
+  echo "  -r,  --rcon             enable rcon, default: 0"
+  echo "  -mn, --maxnpc           maximum amount of NPC's, default: 0"
+  echo "  -fr, --onfootrate       minimum time in milliseconds a client updates the server with new data while running/walking, default: 40"
+  echo "  -cr, --incarrate        minimum time in milliseconds a client updates the server with new data while in a vehicle, default: 40"
+  echo "  -wr, --weaponrate       minimum time in milliseconds a client updates the server with new data while firing a weapon, default: 40"
+  echo "  -sd, --streamdistance   distance on the X,Y plane which server entities will stream in for connected players, default: 300.0"
+  echo "  -sr, --streamrate       number of milliseconds that must elapse before server entities stream distance is retested for each player, default: 1000"
+  echo "  -ts, --timestamps       enable or disable timestamps: 1"
+  echo "  -lq, --logqueries       logs all queries sent to the server by players, it's considerably useful during a DDoS attack, default: 0"
+  echo "  -lf, --logtimeformat    configure the timestamp format. The format is based on the strftime format from C/C++, default: [%H:%M:%S]"
+  echo "  -o,  --output           duplication of log messages (e.g. those printed with print/printf from scripts or logprintf from plugins) in server console, default: 0"
+  echo "  -gt, --gamemodetext     game mode text, default: Unknown"
+  echo "  -cl, --chatlogging      log player chat to the server log, default: 1"
+  echo "  -ml, --messageholelimit missing packet hole to detect DoS attack, default: 1000"
+  echo "  -sm,  --shotmodecomp    0 will disable joypad auto-aiming and shooting will be lag compensated. 2 will enable 'legacy mode' which will disable lag compensation, default: 0"
+  echo "  -nl,  --nolaunch        when flag is set, don't start server but only create server.cfg"
+  exit 1
+else
+  while [[ $# -gt 0 ]]; do
+    opt="$1"
+    shift;
+    arg="$1"
+    if [[ "$current_arg" =~ ^-{1,2}.* ]]; then
+      echo "WARNING: You may have left an argument blank. Double check your command."
+    fi
+    case "$opt" in
+	  "-l"|"--lanmode"         ) LANMODE="$1"; shift;;
+      "-mp"|"--maxplayers"     ) MAXPLAYERS="$1"; shift;;
+      "-a"|"--announce"        ) ANNOUNCE="$1"; shift;;
+      "-q"|"--query"           ) QUERY="$1"; shift;;
+      "-p"|"--port"            ) PORT="$1"; shift;;
+      "-h"|"--hostname"        ) HOSTNAME="$1"; shift;;
+      "-gm"|"--gamemode"       ) GAMEMODES=("${GAMEMODES[@]}" "$1"); shift;;
+      "-w"|"--weburl"          ) WEBURL="$1"; shift;;
+      "-rp"|"--rconpassword"   ) RCONPASSWORD="$1"; shift;;
+      "-fs"|"--filterscript"   ) FILTERSCRIPTS=("${FILTERSCRIPTS[@]}" "$1"); shift;;
+      "-pi"|"--plugin"         ) PLUGINS=("${PLUGINS[@]}" "$1"); shift;;
+      "-pw"|"--password"       ) PASSWORD="$1"; shift;;
+      "-m"|"--mapname"         ) MAPNAME="$1"; shift;;
+      "-b"|"--bind"            ) BIND="$1"; shift;;
+      "-r"|"--rcon"            ) RCON="$1"; shift;;
+      "-mn"|"--maxnpc"         ) MAXNPC="$1"; shift;;
+      "-fr"|"--onfootrate"     ) ONFOOTRATE="$1"; shift;;
+      "-cr"|"--incarrate"      ) INCARRATE="$1"; shift;;
+      "-wr"|"--weaponrate"     ) WEAPONRATE="$1"; shift;;
+      "-sd"|"--streamdistance" ) STREAMDISTANCE="$1"; shift;;
+      "-sr"|"--streamrate"     ) STREAMRATE="$1"; shift;;
+      "-t"|"--timestamps"      ) TIMESTAMPS="$1"; shift;;
+      "-lq"|"--logqueries"     ) LOGQUERIES="$1"; shift;;
+      "-lf"|"--logtimeformat"  ) LOGTIMEFORMAT="$1"; shift;;
+      "-o"|"--output"          ) OUTPUT="$1"; shift;;
+      "-gt"|"--gametextmode"   ) GAMEMODETEXT="$1"; shift;;
+      "-cl"|"--chatlogging"    ) CHATLOGGING="$1"; shift;;
+      "-ml"|"--messageholelimit" ) MESSAGEHOLELIMIT="$1"; shift;;
+      "-sm"|"--shotcompmode"   ) SHOTCOMPMODE="$1"; shift;;
+      "-nl"|"--nolaunch"       ) LAUNCH=false; shift;;
+      *                        ) echo "ERROR: Invalid option: \""$opt"\"" >&2; exit 1;;
+    esac
+  done
+fi
+
+# Check if required maxplayers and port is set
+if [[ "$MAXPLAYERS" -eq "" || "$PORT" -eq "" || "$RCONPASSWORD" = "" ]]; then
+  echo "ERROR: Options -mp|--maxplayers, -p|--port and -rp|--rconpassword are require arguments." >&2
+  exit 1
+fi
+
+# Check for empty gamemode, else fill in default gamemode
+if [ "${#GAMEMODES[@]}" -eq 0 ]; then
+  GAMEMODES=('grandlarc 1');
+fi
+
+
+# Empty or create server.cfg
+>$SERVER_CFG
+
+echo "lanmode $LANMODE" >> $SERVER_CFG
+echo "maxplayers $MAXPLAYERS" >> $SERVER_CFG
+echo "announce $ANNOUNCE" >> $SERVER_CFG
+echo "query $QUERY" >> $SERVER_CFG
+echo "port $PORT" >> $SERVER_CFG
+echo "hostname $HOSTNAME" >> $SERVER_CFG
+
+# Generate gamemode(s)
+for ((i=0;i<${#GAMEMODES[@]};++i)); do
+    echo "gamemode$i ${GAMEMODES[i]}" >> $SERVER_CFG
+done
+
+echo "weburl $WEBURL" >> $SERVER_CFG
+echo "rcon_password $RCONPASSWORD" >> $SERVER_CFG
+echo "filterscripts $FILTERSCRIPTS" >> $SERVER_CFG
+echo "plugins $PLUGINS" >> $SERVER_CFG
+
+# Only add password if it is set
+if [[ "$PASSWORD" != "" ]]; then
+  echo "password "$PASSWORD >> $SERVER_CFG
+fi
+
+echo "mapname "$MAPNAME >> $SERVER_CFG
+
+# Only add IP if it is set
+if [[ "$BIND" != "" ]]; then
+  echo "bind "$BIND >> $SERVER_CFG
+fi
+
+echo "rcon "$RCON >> $SERVER_CFG
+echo "maxnpc "$MAXNPC >> $SERVER_CFG
+echo "onfoot_rate $ONFOOTRATE" >> $SERVER_CFG
+echo "incar_rate $INCARRATE" >> $SERVER_CFG
+echo "weapon_rate $WEAPONRATE" >> $SERVER_CFG
+echo "stream_distance $STREAMDISTANCE" >> $SERVER_CFG
+echo "stream_rate $STREAMRATE" >> $SERVER_CFG
+echo "timestamps $TIMESTAMPS" >> $SERVER_CFG
+echo "logqueries $LOGQUERIES" >> $SERVER_CFG
+echo "logtimeformat $LOGTIMEFORMAT" >> $SERVER_CFG
+echo "output $OUTPUT" >> $SERVER_CFG
+echo "gamemodetext $GAMEMODETEXT" >> $SERVER_CFG
+echo "chatlogging $CHATLOGGING" >> $SERVER_CFG
+echo "messageholelimit $MESSAGEHOLELIMIT" >> $SERVER_CFG
+echo "shotcompmode $SHOTCOMPMODE" >> $SERVER_CFG
+
+# Start server
+if [ "$LAUNCH" = true ] ; then
+   cd $ABSOLUTE_PATH
+   "./samp03svr"
+fi
